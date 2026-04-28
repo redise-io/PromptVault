@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // SHARED HELPERS
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(data) { return isSignedIn() && data.userId == request.auth.uid; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // FOLDER VALIDATION
+    function isValidFolder(data) {
+      return data.keys().hasAll(['name', 'userId', 'createdAt']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.userId == request.auth.uid &&
+             data.createdAt is number;
+    }
+
+    match /folders/{folderId} {
+      allow read: if isOwner(existing());
+      allow create: if isSignedIn() && isValidFolder(incoming());
+      allow update: if isOwner(existing()) && isValidFolder(incoming()) && 
+                    incoming().userId == existing().userId;
+      allow delete: if isOwner(existing());
+    }
+
+    // PROMPT VALIDATION
+    function isValidPrompt(data) {
+      return data.keys().hasAll(['title', 'content', 'userId', 'createdAt', 'updatedAt']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.content is string && data.content.size() <= 10000 &&
+             data.userId == request.auth.uid &&
+             data.createdAt is number &&
+             data.updatedAt is number &&
+             (data.folderId == null || (data.folderId is string && isValidId(data.folderId)));
+    }
+
+    match /prompts/{promptId} {
+      allow read: if isOwner(existing());
+      allow create: if isSignedIn() && isValidPrompt(incoming());
+      allow update: if isOwner(existing()) && isValidPrompt(incoming()) && 
+                    incoming().userId == existing().userId &&
+                    incoming().createdAt == existing().createdAt;
+      allow delete: if isOwner(existing());
+    }
+  }
+}

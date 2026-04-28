@@ -1,0 +1,61 @@
+{
+  "entities": {
+    "Prompt": {
+      "title": "Prompt",
+      "description": "An AI prompt document with versioning and metadata.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "folderId": { "type": "string" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "topic": { "type": "string" },
+        "target": { "type": "string" },
+        "tone": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "updatedAt": { "type": "number" },
+        "rating": { "type": "number" },
+        "usageCount": { "type": "number" },
+        "versions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "content": { "type": "string" },
+              "tags": { "type": "array", "items": { "type": "string" } },
+              "topic": { "type": "string" },
+              "target": { "type": "string" },
+              "tone": { "type": "string" },
+              "createdAt": { "type": "number" }
+            }
+          }
+        },
+        "userId": { "type": "string" }
+      },
+      "required": ["title", "content", "userId", "createdAt", "updatedAt"]
+    },
+    "Folder": {
+      "title": "Folder",
+      "description": "A collection for organizing prompts.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "userId": { "type": "string" }
+      },
+      "required": ["name", "userId", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/prompts/{promptId}": {
+      "schema": "Prompt",
+      "description": "User prompts collection."
+    },
+    "/folders/{folderId}": {
+      "schema": "Folder",
+      "description": "User folders collection."
+    }
+  }
+}
